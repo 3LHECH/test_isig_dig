@@ -1,0 +1,9 @@
+test-.net/bin
+test-.net/obj
+test-.net/clients.db
+test-.net/test-.net.csproj.user
+#test-.net/test-.net.csproj.user
+
+test_angular/node_modules
+test_angular/.angular
+test_angular/.vscode

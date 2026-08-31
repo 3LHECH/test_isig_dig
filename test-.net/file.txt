@@ -1,0 +1,18 @@
+
+dotnet new list
+
+
+
+The scaffolder fails because aspnet-codegenerator defaults to expecting SQL Server packages installed, even when using SQLite.
+
+Pass the -sqlite flag explicitly so it uses your SQLite DbContext provider.
+
+
+dotnet aspnet-codegenerator controller -name ProductsController -async -api -m Product -dc test_.net.Data.ApplicationDbContext -outDir Controllers -sqlite
+
+
+https://medium.com/@solomongetachew112/jwt-authentication-in-net-8-a-complete-guide-for-secure-and-scalable-applications-6281e5e8667c
+
+dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer --version 8.0.3
+
+dotnet add package BCrypt.Net-Next --version 4.0.3
