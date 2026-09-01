@@ -11,8 +11,7 @@ services:
       - "5000:80"
     environment:
       - ConnectionStrings__DefaultConnection=Server=db;Database=IsigDigDb;User Id=sa;Password=YourStrong@Password123;TrustServerCertificate=True;
-    depends_on:
-      - db
+
 
   frontend:
     build:
