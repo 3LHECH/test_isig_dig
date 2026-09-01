@@ -37,55 +37,6 @@ The fastest way to run the entire stack (Database, API, and Frontend):
    docker compose down
    ```
 
----
-
-## 🛠 Local Development (Without Docker)
-
-### Prerequisites
-* [.NET SDK 8.0+](https://dotnet.microsoft.com/download)
-* [Node.js](https://nodejs.org/) (v18+)
-* [Angular CLI](https://angular.io/cli) (`npm install -g @angular/cli`)
-
-### Backend Setup
-
-1. **Restore dependencies:**
-   ```bash
-   cd test-.net
-   dotnet restore
-   ```
-
-2. **Apply database migration (if needed):**
-   ```bash
-   dotnet ef migrations add InitialCreate
-   dotnet ef database update
-   ```
-
-3. **Run the API:**
-   ```bash
-   dotnet run
-   ```
-   The API will be available at `http://localhost:5065`
-
-### Frontend Setup
-
-1. **Restore dependencies:**
-   ```bash
-   cd test_angular
-   npm install
-   ```
-
-2. **Run the application:**
-   ```bash
-   ng serve
-   ```
-   The application will be available at `http://localhost:4200`
-
-3. **Build for production:**
-   ```bash
-   ng build
-   ```
-
----
 
 ## 📁 Project Structure
 
