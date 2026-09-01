@@ -1,34 +1,108 @@
-# Billing & Management System (ISIG DIG Task)
+# 💼 Commercial Management System
 
-A full-stack web application for managing Clients, Products, and Invoices built with an **Angular** frontend and a **.NET Core Web API** backend.
-
----
-
-## 🏗 Tech Stack
-
-* **Frontend:** Angular (Standalone Components, Signals, Reactive Forms, Tailwind CSS)
-* **Backend:** .NET Core Web API (Entity Framework Core)
-* **Database:** SQL Server / PostgreSQL (via EF Core migrations)
+A full-stack web application built with **.NET 8 Web API** and **Angular** for managing clients, products, and commercial operations.
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Tech Stack
 
-Follow these steps to get a local copy running on your machine.
+* **Backend:** .NET 8 Web API, Entity Framework Core, SQLite, BCrypt
+* **Frontend:** Angular, RxJS, TypeScript
+* **Database:** SQLite
+* **Containerization:** Docker & Docker Compose
+
+---
+
+## ⚡ Quick Start (Using Docker - Recommended)
+
+The fastest way to run the entire stack (Database, API, and Frontend):
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/3LHECH/test_isig_dig.git
+   cd test_isig_dig
+   ```
+
+2. **Start all services:**
+   ```bash
+   docker compose up -d
+   ```
+
+3. **Access the application:**
+   * **Frontend:** http://localhost:4200
+   * **API:** http://localhost:5065
+
+4. **Stop the application:**
+   ```bash
+   docker compose down
+   ```
+
+---
+
+## 🛠 Local Development (Without Docker)
 
 ### Prerequisites
-
-* [Node.js](https://nodejs.org/) (v18 or higher)
+* [.NET SDK 8.0+](https://dotnet.microsoft.com/download)
+* [Node.js](https://nodejs.org/) (v18+)
 * [Angular CLI](https://angular.io/cli) (`npm install -g @angular/cli`)
-* [.NET SDK 8.0](https://dotnet.microsoft.com/download) (or matching target version)
-* [SQL Server] or local database provider instance configured
+
+### Backend Setup
+
+1. **Restore dependencies:**
+   ```bash
+   cd test-.net
+   dotnet restore
+   ```
+
+2. **Apply database migration (if needed):**
+   ```bash
+   dotnet ef migrations add InitialCreate
+   dotnet ef database update
+   ```
+
+3. **Run the API:**
+   ```bash
+   dotnet run
+   ```
+   The API will be available at `http://localhost:5065`
+
+### Frontend Setup
+
+1. **Restore dependencies:**
+   ```bash
+   cd test_angular
+   npm install
+   ```
+
+2. **Run the application:**
+   ```bash
+   ng serve
+   ```
+   The application will be available at `http://localhost:4200`
+
+3. **Build for production:**
+   ```bash
+   ng build
+   ```
 
 ---
 
-## 🛠 Project Setup & Running
+## 📁 Project Structure
 
-### 1. Clone the Repository
+```
+test-.net/                  # Backend API
+├── Controllers/          # API endpoints
+├── DTOs/                 # Data Transfer Objects
+├── Interfaces/           # Service interfaces
+├── Models/               # Entity models
+├── Services/             # Business logic
+└── appsettings.json      # Configuration
 
-```bash
-git clone [https://github.com/3LHECH/test_isig_dig.git](https://github.com/3LHECH/test_isig_dig.git)
-cd test_isig_dig
+test_angular/             # Angular Frontend
+├── src/app/
+│   ├── core/             # Services & guards
+│   ├── models/           # Frontend models
+│   ├── pages/            # Main pages
+│   └── shared/           # Components & pipes
+└── angular.json          # Angular configuration
+```
