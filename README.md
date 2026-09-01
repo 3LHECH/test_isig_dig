@@ -25,12 +25,12 @@ The fastest way to run the entire stack (Database, API, and Frontend):
 
 2. **Start all services:**
    ```bash
-   docker compose up -d
+   docker compose up --build
    ```
 
 3. **Access the application:**
    * **Frontend:** http://localhost:4200
-   * **API:** http://localhost:5065
+   * **API:** http://localhost:5065/swagger/index.html
 
 4. **Stop the application:**
    ```bash
