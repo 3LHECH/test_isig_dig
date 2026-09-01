@@ -19,15 +19,7 @@ public class ClientService : IClientService
     public async Task<IEnumerable<ClientResponseDto>> GetAllAsync()
     {
         return await _context.Clients
-            .Select(c => new ClientResponseDto(
-                c.Id,
-                c.LastName,
-                c.FirstName,
-                c.Email,
-                c.Phone,
-                c.Address,
-                c.CreatedAt
-            ))
+            .Select(c => MapToDto(c))
             .ToListAsync();
     }
 
@@ -36,7 +28,7 @@ public class ClientService : IClientService
         var c = await _context.Clients.FindAsync(id);
         if (c is null) return null;
 
-        return new ClientResponseDto(c.Id, c.LastName, c.FirstName, c.Email, c.Phone, c.Address, c.CreatedAt);
+        return MapToDto(c);
     }
 
     public async Task<Client?> GetByEmailAsync(string email)
@@ -44,11 +36,11 @@ public class ClientService : IClientService
         return await _context.Clients.FirstOrDefaultAsync(c => c.Email == email);
     }
 
-    public async Task<ClientResponseDto> CreateAsync(CreateClientDto dto, CancellationToken cancellationToken = default)
+    public async Task<ClientResponseDto> CreateAsync(CreateClientDto dto)
     {
-        // Check if the email is already registered
+        // Check if the email is already registered (case-insensitive check recommended)
         var emailExists = await _context.Clients
-            .AnyAsync(c => c.Email == dto.Email, cancellationToken);
+            .AnyAsync(c => c.Email.ToLower() == dto.Email.ToLower());
 
         if (emailExists)
         {
@@ -57,14 +49,21 @@ public class ClientService : IClientService
 
         var client = new Client
         {
-            // Map DTO properties
-            Email = dto.Email,
             FirstName = dto.FirstName,
-            // ...
+            LastName = dto.LastName,
+            Email = dto.Email,
+            Phone = dto.Phone,
+            Address = dto.Address,
+            CreatedAt = DateTime.UtcNow
         };
 
+        if (!string.IsNullOrWhiteSpace(dto.Password))
+        {
+            client.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+        }
+
         _context.Clients.Add(client);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync();
 
         return MapToDto(client);
     }
@@ -98,4 +97,7 @@ public class ClientService : IClientService
         await _context.SaveChangesAsync();
         return true;
     }
+
+    private static ClientResponseDto MapToDto(Client c) =>
+        new(c.Id, c.LastName, c.FirstName, c.Email, c.Phone, c.Address, c.CreatedAt);
 }

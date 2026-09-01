@@ -11,5 +11,4 @@ public interface IClientService
     Task<ClientResponseDto> CreateAsync(CreateClientDto dto);
     Task<bool> UpdateAsync(int id, UpdateClientDto dto);
     Task<bool> DeleteAsync(int id);
-    Task<ClientDto> CreateAsync(CreateClientDto dto);
 }
