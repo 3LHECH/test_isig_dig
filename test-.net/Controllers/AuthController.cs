@@ -80,4 +80,15 @@ public class AuthController : ControllerBase
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    [HttpGet("status")]
+    public IActionResult Status()
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return Ok(true);
+        }
+
+        return Ok(false);
+    }
 }

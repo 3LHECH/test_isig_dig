@@ -41,8 +41,26 @@ public class OrderService : IOrderService
         var client = await _context.Clients.FindAsync(dto.ClientId)
             ?? throw new KeyNotFoundException($"Client with ID {dto.ClientId} not found.");
 
-        var productIds = dto.OrderLines.Select(l => l.ProductId).ToList();
+        if (dto.OrderLines is null || !dto.OrderLines.Any())
+        {
+            throw new InvalidOperationException("An order must contain at least one order line.");
+        }
+
+        var productIds = dto.OrderLines.Select(l => l.ProductId).Distinct().ToList();
         var products = await _context.Products.Where(p => productIds.Contains(p.Id)).ToListAsync();
+
+        foreach (var item in dto.OrderLines)
+        {
+            var product = products.FirstOrDefault(p => p.Id == item.ProductId)
+                ?? throw new KeyNotFoundException($"Product with ID {item.ProductId} not found.");
+
+            if (product.StockQuantity < item.Quantity)
+            {
+                throw new InvalidOperationException(
+                    $"Insufficient stock for product '{product.Name}'. Available: {product.StockQuantity}, Requested: {item.Quantity}."
+                );
+            }
+        }
 
         var order = new Order
         {
@@ -56,8 +74,7 @@ public class OrderService : IOrderService
 
         foreach (var item in dto.OrderLines)
         {
-            var product = products.FirstOrDefault(p => p.Id == item.ProductId)
-                ?? throw new KeyNotFoundException($"Product with ID {item.ProductId} not found.");
+            var product = products.First(p => p.Id == item.ProductId);
 
             decimal lineTotal = product.UnitPriceHT * item.Quantity;
             totalHT += lineTotal;
@@ -129,6 +146,15 @@ public class OrderService : IOrderService
         return true;
     }
 
+    public async Task<bool> DeleteOrderAsync(int id)
+    {
+        var order = await _context.Orders.FindAsync(id);
+        if (order is null) return false;
+
+        _context.Orders.Remove(order);
+        await _context.SaveChangesAsync();
+        return true;
+    }
     private static OrderResponseDto MapToResponseDto(Order o) => new(
         o.Id,
         o.OrderNumber,
@@ -142,4 +168,80 @@ public class OrderService : IOrderService
             ol.Id, ol.ProductId, ol.Product.Name, ol.Quantity, ol.UnitPrice, ol.LineTotal
         )).ToList()
     );
+    
+    public async Task<bool> UpdateAsync(int id, UpdateOrderDto dto)
+    {
+        var order = await _context.Orders
+            .Include(o => o.OrderLines)
+            .FirstOrDefaultAsync(o => o.Id == id);
+
+    if (order == null || order.Status != OrderStatus.Draft)
+    {
+        return false; // Cannot update non-existent or validated order
+    }
+
+    // Verify client exists
+    var clientExists = await _context.Clients.AnyAsync(c => c.Id == dto.ClientId);
+    if (!clientExists)
+    {
+        throw new KeyNotFoundException($"Client with ID {dto.ClientId} not found.");
+    }
+
+    if (dto.OrderLines is null || !dto.OrderLines.Any())
+    {
+        throw new InvalidOperationException("An order must contain at least one order line.");
+    }
+
+    // Load and validate all referenced products
+    var productIds = dto.OrderLines.Select(l => l.ProductId).Distinct().ToList();
+    var products = await _context.Products
+        .Where(p => productIds.Contains(p.Id))
+        .ToDictionaryAsync(p => p.Id);
+
+    foreach (var line in dto.OrderLines)
+    {
+        if (!products.TryGetValue(line.ProductId, out var product))
+        {
+            throw new KeyNotFoundException($"Product with ID {line.ProductId} not found.");
+        }
+
+        if (product.StockQuantity < line.Quantity)
+        {
+            throw new InvalidOperationException(
+                $"Insufficient stock for product '{product.Name}'. Available: {product.StockQuantity}, Requested: {line.Quantity}."
+            );
+        }
+    }
+
+    // Update ClientId
+    order.ClientId = dto.ClientId;
+
+    // Clear existing order lines
+    order.OrderLines.Clear();
+
+    decimal newTotalHT = 0;
+
+    // Re-populate order lines from DTO
+    foreach (var dtoLine in dto.OrderLines)
+    {
+        var product = products[dtoLine.ProductId];
+        decimal lineTotal = product.UnitPriceHT * dtoLine.Quantity;
+        newTotalHT += lineTotal;
+
+        order.OrderLines.Add(new OrderLine
+        {
+            ProductId = product.Id,
+            Quantity = dtoLine.Quantity,
+            UnitPrice = product.UnitPriceHT,
+            LineTotal = lineTotal
+        });
+    }
+
+    // Recalculate totals
+    order.TotalHT = newTotalHT;
+    order.TotalTTC = newTotalHT * (1 + (dto.TaxRatePercentage / 100.0m));
+
+    await _context.SaveChangesAsync();
+    return true;
+    }
 }

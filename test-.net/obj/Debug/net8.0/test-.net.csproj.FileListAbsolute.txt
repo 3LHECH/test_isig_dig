@@ -526,3 +526,4 @@
 /home/elking/Desktop/full project/test-.net/obj/Debug/net8.0/test-.net.pdb
 /home/elking/Desktop/full project/test-.net/obj/Debug/net8.0/test-.net.genruntimeconfig.cache
 /home/elking/Desktop/full project/test-.net/obj/Debug/net8.0/ref/test-.net.dll
+/home/elking/Desktop/full project/test-.net/obj/Debug/net8.0/test-.net.sourcelink.json

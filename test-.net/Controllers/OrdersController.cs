@@ -44,6 +44,13 @@ public class OrdersController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> DeleteOrder(int id)
+    {
+        var success = await _orderService.DeleteOrderAsync(id);
+        if (!success) return NotFound(new { message = $"Order with ID {id} not found." });
+        return NoContent();
+    }
 
     [HttpPost("{id:int}/validate")]
     public async Task<IActionResult> ValidateOrder(int id)
@@ -66,5 +73,20 @@ public class OrdersController : ControllerBase
         var success = await _orderService.CancelOrderAsync(id);
         if (!success) return BadRequest(new { message = $"Order with ID {id} cannot be cancelled." });
         return NoContent();
+    }
+     [HttpPut("{id:int}")]
+    public async Task<ActionResult<OrderResponseDto>> UpdateOrder(int id, [FromBody] UpdateOrderDto dto)
+    {
+        try
+        {
+            var updated = await _orderService.UpdateAsync(id, dto);
+            if (!updated) return NotFound(new { message = $"Order with ID {id} not found." });
+            var result = await _orderService.GetByIdAsync(id);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }

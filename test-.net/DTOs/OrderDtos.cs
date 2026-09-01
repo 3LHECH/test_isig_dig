@@ -24,6 +24,12 @@ public record OrderResponseDto(
     List<OrderLineResponseDto> OrderLines
 );
 
+public record UpdateOrderDto(
+    [Required] int ClientId,
+    [Required, MinLength(1)] List<CreateOrderLineDto> OrderLines,
+    [Range(0, 100)] decimal TaxRatePercentage = 19.0m
+);
+
 public record CreateOrderLineDto(
     [Required] int ProductId,
     [Range(1, int.MaxValue)] int Quantity
