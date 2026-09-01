@@ -55,13 +55,13 @@ export class Login {
 
         // Direct String Response (e.g. Unauthorized "Invalid credentials")
         if (typeof err?.error === 'string') {
-          this.errorMessage.set(err.error);
+          this.errorMessage.set(err.error.message);
           return;
         }
 
         // Standard Error Object Response
         if (err?.error?.message) {
-          this.errorMessage.set("a user with that email do exist");
+          this.errorMessage.set(err.error.message);
           return;
         }
 
