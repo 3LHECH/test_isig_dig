@@ -1,0 +1,264 @@
+<div class="p-6 max-w-7xl mx-auto space-y-6 relative">
+    <!-- Success / Error Toast Notification -->
+    @if (toast(); as currentToast) {
+    <div class="fixed top-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium transition-all duration-300"
+        [ngClass]="{
+            'bg-emerald-50 border-emerald-200 text-emerald-800': currentToast.type === 'success',
+            'bg-rose-50 border-rose-200 text-rose-800': currentToast.type === 'error'
+        }">
+        <span>{{ currentToast.type === 'success' ? '✓' : '⚠️' }}</span>
+        <span>{{ currentToast.message }}</span>
+    </div>
+    }
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">Clients</h1>
+            <p class="text-slate-500 text-sm">Manage customer records and credentials</p>
+        </div>
+        <button (click)="openAddModal()"
+            class="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium shadow-sm transition">
+            + Add Client
+        </button>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+        <input type="text" placeholder="Search by name, email, or phone..." [value]="searchQuery()"
+            (input)="onSearchChange($event)"
+            class="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition" />
+    </div>
+
+    <!-- Clients Data Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        @if (isLoading()) {
+        <div class="p-8 text-center text-slate-500">Loading clients...</div>
+        } @else if (filteredClients().length === 0) {
+        <div class="p-8 text-center text-slate-500">No clients found.</div>
+        } @else {
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-600">
+                <thead class="bg-slate-50 border-b border-slate-200 text-xs uppercase font-semibold text-slate-500">
+                    <tr>
+                        <th class="px-6 py-3">Client Name</th>
+                        <th class="px-6 py-3">Email</th>
+                        <th class="px-6 py-3">Phone</th>
+                        <th class="px-6 py-3">Address</th>
+                        <th class="px-6 py-3">Created At</th>
+                        <th class="px-6 py-3 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    @for (client of filteredClients(); track client.id) {
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-6 py-4 font-medium text-slate-900">
+                            {{ client.firstName }} {{ client.lastName }}
+                        </td>
+                        <td class="px-6 py-4">{{ client.email }}</td>
+                        <td class="px-6 py-4 font-mono text-xs">{{ client.phone }}</td>
+                        <td class="px-6 py-4 max-w-xs truncate">{{ client.address }}</td>
+                        <td class="px-6 py-4 text-xs text-slate-500 whitespace-nowrap">{{ client.createdAt |
+                            date:'mediumDate' }}</td>
+                        <td class="px-6 py-4 text-right space-x-3">
+                            <button (click)="openViewModal(client)"
+                                class="text-slate-600 hover:text-slate-900 font-medium text-xs transition">
+                                View
+                            </button>
+                            <button (click)="openEditModal(client)"
+                                class="text-indigo-600 hover:text-indigo-800 font-medium text-xs transition">
+                                Edit
+                            </button>
+                            <button (click)="deleteClient(client.id)"
+                                class="text-rose-600 hover:text-rose-800 font-medium text-xs transition">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        }
+    </div>
+
+    <!-- Client View Details Modal -->
+    @if (selectedClient(); as client) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md my-8 overflow-hidden border border-slate-200">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-sm">
+                        {{ client.firstName.charAt(0) }}{{ client.lastName.charAt(0) }}
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800">{{ client.firstName }} {{ client.lastName }}</h3>
+                        <p class="text-xs text-slate-500">Client Details</p>
+                    </div>
+                </div>
+                <button (click)="closeViewModal()"
+                    class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            </div>
+
+            <div class="p-6 space-y-4 text-sm">
+                <div class="grid grid-cols-1 gap-3">
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <span class="block text-xs font-semibold uppercase text-slate-400 mb-1">Email Address</span>
+                        <a [href]="'mailto:' + client.email" class="text-indigo-600 hover:underline font-medium">
+                            {{ client.email }}
+                        </a>
+                    </div>
+
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <span class="block text-xs font-semibold uppercase text-slate-400 mb-1">Phone Number</span>
+                        <a [href]="'tel:' + client.phone"
+                            class="text-slate-800 font-medium hover:underline font-mono text-xs">
+                            {{ client.phone }}
+                        </a>
+                    </div>
+
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <span class="block text-xs font-semibold uppercase text-slate-400 mb-1">Address</span>
+                        <p class="text-slate-800 whitespace-pre-line leading-relaxed">
+                            {{ client.address || 'No address provided.' }}
+                        </p>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <span class="block text-xs font-semibold uppercase text-slate-400 mb-1">Created At</span>
+                        <p class="text-slate-800 leading-relaxed">
+                            {{ client.createdAt | date:'medium' }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                    <button (click)="closeViewModal()"
+                        class="px-4 py-2 border rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">
+                        Close
+                    </button>
+                    <button (click)="switchEditFromView(client)"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium">
+                        Edit Client
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- Client Modal (Create & Update) -->
+    @if (isModalOpen()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg my-8 overflow-hidden border border-slate-200">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-800">
+                    {{ editingClientId() ? 'Edit Client' : 'Add New Client' }}
+                </h3>
+                <button (click)="closeModal()"
+                    class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            </div>
+
+            <form [formGroup]="clientForm" (ngSubmit)="onSubmit()" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+                @if (errorMessage()) {
+                <div
+                    class="bg-rose-50 text-rose-600 p-3 rounded-lg text-xs border border-rose-200 font-medium flex items-center gap-2">
+                    <span>⚠️</span>
+                    <span>{{ errorMessage() }}</span>
+                </div>
+                }
+
+                <!-- Name Row -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-1">
+                            First Name <span class="text-rose-500">*</span>
+                        </label>
+                        <input formControlName="firstName" type="text"
+                            [ngClass]="{ 'border-rose-500 focus:ring-rose-500': isFieldInvalid('firstName') }"
+                            class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition" />
+                        @if (isFieldInvalid('firstName')) {
+                        <p class="mt-1 text-xs text-rose-500">First name is required.</p>
+                        }
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-1">
+                            Last Name <span class="text-rose-500">*</span>
+                        </label>
+                        <input formControlName="lastName" type="text"
+                            [ngClass]="{ 'border-rose-500 focus:ring-rose-500': isFieldInvalid('lastName') }"
+                            class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition" />
+                        @if (isFieldInvalid('lastName')) {
+                        <p class="mt-1 text-xs text-rose-500">Last name is required.</p>
+                        }
+                    </div>
+                </div>
+
+                <!-- Email Field -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">
+                        Email <span class="text-rose-500">*</span>
+                    </label>
+                    <input formControlName="email" type="email"
+                        [ngClass]="{ 'border-rose-500 focus:ring-rose-500': isFieldInvalid('email') }"
+                        class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition" />
+                    @if (isFieldInvalid('email')) {
+                    <p class="mt-1 text-xs text-rose-500">Valid email address is required.</p>
+                    }
+                </div>
+
+                <!-- Password Field -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">
+                        Password {{ editingClientId() ? '(Leave blank to keep unchanged)' : '*' }}
+                    </label>
+                    <input formControlName="password" type="password" placeholder="••••••••"
+                        [ngClass]="{ 'border-rose-500 focus:ring-rose-500': isFieldInvalid('password') }"
+                        class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition" />
+                    @if (isFieldInvalid('password')) {
+                    <p class="mt-1 text-xs text-rose-500">Password must be at least 6 characters.</p>
+                    }
+                </div>
+
+                <!-- Phone Field -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">
+                        Phone <span class="text-rose-500">*</span>
+                    </label>
+                    <input formControlName="phone" type="text" placeholder="12345678"
+                        [ngClass]="{ 'border-rose-500 focus:ring-rose-500': isFieldInvalid('phone') }"
+                        class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition" />
+                    @if (isFieldInvalid('phone')) {
+                    <p class="mt-1 text-xs text-rose-500">Must be an 8-digit phone number.</p>
+                    }
+                </div>
+
+                <!-- Address Field -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">
+                        Address <span class="text-rose-500">*</span>
+                    </label>
+                    <textarea formControlName="address" rows="2"
+                        [ngClass]="{ 'border-rose-500 focus:ring-rose-500': isFieldInvalid('address') }"
+                        class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition"></textarea>
+                    @if (isFieldInvalid('address')) {
+                    <p class="mt-1 text-xs text-rose-500">Address is required.</p>
+                    }
+                </div>
+
+                <!-- Actions Footer -->
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                    <button type="button" (click)="closeModal()"
+                        class="px-4 py-2 border rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">
+                        Cancel
+                    </button>
+                    <button type="submit" [disabled]="isSubmitting()"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium disabled:opacity-50">
+                        {{ isSubmitting() ? 'Saving...' : (editingClientId() ? 'Update Client' : 'Save Client') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    }
+</div>

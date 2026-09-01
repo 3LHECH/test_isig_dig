@@ -1,0 +1,271 @@
+<div class="p-6 max-w-7xl mx-auto space-y-6 relative">
+    <!-- Success / Error Toast Notification -->
+    @if (toast(); as currentToast) {
+    <div class="fixed top-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium transition-all duration-300"
+        [ngClass]="{
+            'bg-emerald-50 border-emerald-200 text-emerald-800': currentToast.type === 'success',
+            'bg-rose-50 border-rose-200 text-rose-800': currentToast.type === 'error'
+        }">
+        <span>{{ currentToast.type === 'success' ? '✓' : '⚠️' }}</span>
+        <span>{{ currentToast.message }}</span>
+    </div>
+    }
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">Products</h1>
+            <p class="text-slate-500 text-sm">Manage inventory, stock levels, and catalog pricing</p>
+        </div>
+        <button (click)="openAddModal()"
+            class="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium shadow-sm transition">
+            + Add Product
+        </button>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+        <input type="text" placeholder="Search by reference, name, or description..." [value]="searchQuery()"
+            (input)="onSearchChange($event)"
+            class="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition" />
+    </div>
+
+    <!-- Products Data Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        @if (isLoading()) {
+        <div class="p-8 text-center text-slate-500">Loading products...</div>
+        } @else if (filteredProducts().length === 0) {
+        <div class="p-8 text-center text-slate-500">No products found.</div>
+        } @else {
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-600">
+                <thead class="bg-slate-50 border-b border-slate-200 text-xs uppercase font-semibold text-slate-500">
+                    <tr>
+                        <th class="px-6 py-3">Reference</th>
+                        <th class="px-6 py-3">Name</th>
+                        <th class="px-6 py-3">Description</th>
+                        <th class="px-6 py-3">Unit Price (HT)</th>
+                        <th class="px-6 py-3">Stock Status</th>
+                        <th class="px-6 py-3 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    @for (product of filteredProducts(); track product.id) {
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-6 py-4 font-semibold text-slate-900 font-mono text-xs">
+                            {{ product.reference }}
+                        </td>
+                        <td class="px-6 py-4 font-medium text-slate-900">{{ product.name }}</td>
+                        <td class="px-6 py-4 text-slate-500 max-w-xs truncate">{{ product.description }}</td>
+                        <td class="px-6 py-4 font-medium text-slate-800">
+                            {{ product.unitPriceHT | currency:'EUR' }}
+                        </td>
+                        <td class="px-6 py-4">
+                            @if (product.stockQuantity > 10) {
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                                {{ product.stockQuantity }} in stock
+                            </span>
+                            } @else if (product.stockQuantity > 0) {
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                Low: {{ product.stockQuantity }} left
+                            </span>
+                            } @else {
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800">
+                                Out of stock
+                            </span>
+                            }
+                        </td>
+                        <td class="px-6 py-4 text-right space-x-3">
+                            <button (click)="openViewModal(product)"
+                                class="text-slate-600 hover:text-slate-900 font-medium text-xs transition">
+                                View
+                            </button>
+                            <button (click)="openEditModal(product)"
+                                class="text-indigo-600 hover:text-indigo-800 font-medium text-xs transition">
+                                Edit
+                            </button>
+                            <button (click)="deleteProduct(product.id)"
+                                class="text-rose-600 hover:text-rose-800 font-medium text-xs transition">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        }
+    </div>
+
+    <!-- Product View Details Modal -->
+    @if (selectedProduct(); as product) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md my-8 overflow-hidden border border-slate-200">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                <div class="flex items-center gap-2">
+                    <span class="px-2 py-1 rounded bg-slate-200 font-mono text-xs font-semibold text-slate-700">
+                        {{ product.reference }}
+                    </span>
+                    <h3 class="text-base font-bold text-slate-800">Product Details</h3>
+                </div>
+                <button (click)="closeViewModal()"
+                    class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <div>
+                    <h4 class="text-xl font-bold text-slate-900">{{ product.name }}</h4>
+                    <p class="mt-2 text-sm text-slate-600 whitespace-pre-line leading-relaxed">
+                        {{ product.description || 'No description available.' }}
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <span class="block text-xs text-slate-500 font-medium">Unit Price (HT)</span>
+                        <span class="text-lg font-bold text-slate-800">
+                            {{ product.unitPriceHT | currency:'EUR' }}
+                        </span>
+                    </div>
+
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <span class="block text-xs text-slate-500 font-medium mb-1">Stock Status</span>
+                        @if (product.stockQuantity > 10) {
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                            {{ product.stockQuantity }} in stock
+                        </span>
+                        } @else if (product.stockQuantity > 0) {
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                            Low: {{ product.stockQuantity }} left
+                        </span>
+                        } @else {
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800">
+                            Out of stock
+                        </span>
+                        }
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                    <button (click)="closeViewModal()"
+                        class="px-4 py-2 border rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">
+                        Close
+                    </button>
+                    <button (click)="switchEditFromView(product)"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium">
+                        Edit Product
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- Product Modal (Create & Update) -->
+    @if (isModalOpen()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg my-8 overflow-hidden border border-slate-200">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-800">
+                    {{ editingProductId() ? 'Edit Product' : 'Add New Product' }}
+                </h3>
+                <button (click)="closeModal()"
+                    class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            </div>
+
+            <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+                @if (errorMessage()) {
+                <div
+                    class="bg-rose-50 text-rose-600 p-3 rounded-lg text-xs border border-rose-200 font-medium flex items-center gap-2">
+                    <span>⚠️</span>
+                    <span>{{ errorMessage() }}</span>
+                </div>
+                }
+
+                <!-- Reference & Name Row -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-1">
+                            SKU / Reference <span class="text-rose-500">*</span>
+                        </label>
+                        <input formControlName="reference" type="text" placeholder="PROD-001"
+                            [ngClass]="{ 'border-rose-500 focus:ring-rose-500': isFieldInvalid('reference') }"
+                            class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition" />
+                        @if (isFieldInvalid('reference')) {
+                        <p class="mt-1 text-xs text-rose-500">Reference is required.</p>
+                        }
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-1">
+                            Product Name <span class="text-rose-500">*</span>
+                        </label>
+                        <input formControlName="name" type="text" placeholder="Wireless Mouse"
+                            [ngClass]="{ 'border-rose-500 focus:ring-rose-500': isFieldInvalid('name') }"
+                            class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition" />
+                        @if (isFieldInvalid('name')) {
+                        <p class="mt-1 text-xs text-rose-500">Name is required.</p>
+                        }
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">
+                        Description <span class="text-rose-500">*</span>
+                    </label>
+                    <textarea formControlName="description" rows="3" placeholder="Brief item details..."
+                        [ngClass]="{ 'border-rose-500 focus:ring-rose-500': isFieldInvalid('description') }"
+                        class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition"></textarea>
+                    @if (isFieldInvalid('description')) {
+                    <p class="mt-1 text-xs text-rose-500">Description is required.</p>
+                    }
+                </div>
+
+                <!-- Price & Stock Row -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-1">
+                            Unit Price HT (€) <span class="text-rose-500">*</span>
+                        </label>
+                        <input formControlName="unitPriceHT" type="number" step="0.01"
+                            [ngClass]="{ 'border-rose-500 focus:ring-rose-500': isFieldInvalid('unitPriceHT') }"
+                            class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition" />
+                        @if (isFieldInvalid('unitPriceHT')) {
+                        <p class="mt-1 text-xs text-rose-500">Must be greater than 0.</p>
+                        }
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-1">
+                            Stock Quantity <span class="text-rose-500">*</span>
+                        </label>
+                        <input formControlName="stockQuantity" type="number" min="0"
+                            [ngClass]="{ 'border-rose-500 focus:ring-rose-500': isFieldInvalid('stockQuantity') }"
+                            class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition" />
+                        @if (isFieldInvalid('stockQuantity')) {
+                        <p class="mt-1 text-xs text-rose-500">Cannot be negative.</p>
+                        }
+                    </div>
+                </div>
+
+                <!-- Actions Footer -->
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                    <button type="button" (click)="closeModal()"
+                        class="px-4 py-2 border rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">
+                        Cancel
+                    </button>
+                    <button type="submit" [disabled]="isSubmitting()"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium disabled:opacity-50">
+                        {{ isSubmitting() ? 'Saving...' : (editingProductId() ? 'Update Product' : 'Save Product') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    }
+</div>
