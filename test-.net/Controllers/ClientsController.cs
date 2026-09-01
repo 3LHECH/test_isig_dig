@@ -41,6 +41,11 @@ public class ClientsController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, UpdateClientDto dto)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
         var success = await _clientService.UpdateAsync(id, dto);
         if (!success) return NotFound(new { message = $"Client with ID {id} was not found." });
 

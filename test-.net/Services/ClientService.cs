@@ -79,9 +79,13 @@ public class ClientService : IClientService
         client.LastName = dto.LastName;
         client.FirstName = dto.FirstName;
         client.Email = dto.Email;
-        client.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
         client.Phone = dto.Phone;
         client.Address = dto.Address;
+
+        if (!string.IsNullOrWhiteSpace(dto.Password))
+        {
+            client.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+        }
 
         await _context.SaveChangesAsync();
         return true;

@@ -6,40 +6,28 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace test_.net.Migrations
 {
     /// <inheritdoc />
-    public partial class auth : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "Password",
-                table: "Clients",
-                type: "TEXT",
-                nullable: false,
-                defaultValue: "");
-
             migrationBuilder.CreateTable(
-                name: "Orders",
+                name: "Clients",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    OrderNumber = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    OrderDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    Status = table.Column<int>(type: "INTEGER", nullable: false),
-                    TotalHT = table.Column<double>(type: "REAL", nullable: false),
-                    TotalTTC = table.Column<double>(type: "REAL", nullable: false),
-                    ClientId = table.Column<int>(type: "INTEGER", nullable: false)
+                    LastName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    FirstName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Email = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
+                    Phone = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
+                    Address = table.Column<string>(type: "TEXT", maxLength: 250, nullable: false),
+                    Password = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Orders", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Orders_Clients_ClientId",
-                        column: x => x.ClientId,
-                        principalTable: "Clients",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                    table.PrimaryKey("PK_Clients", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -50,14 +38,44 @@ namespace test_.net.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     Reference = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     Name = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
-                    Description = table.Column<string>(type: "TEXT", nullable: false),
-                    UnitPriceHT = table.Column<double>(type: "REAL", nullable: false),
+                    Description = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
+                    UnitPriceHT = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
                     StockQuantity = table.Column<int>(type: "INTEGER", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Products", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Orders",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    OrderNumber = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    OrderDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    Status = table.Column<int>(type: "INTEGER", nullable: false),
+                    TotalHT = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
+                    TotalTTC = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
+                    ClientId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ClientId1 = table.Column<int>(type: "INTEGER", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Orders", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Orders_Clients_ClientId",
+                        column: x => x.ClientId,
+                        principalTable: "Clients",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Orders_Clients_ClientId1",
+                        column: x => x.ClientId1,
+                        principalTable: "Clients",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -69,8 +87,8 @@ namespace test_.net.Migrations
                     OrderId = table.Column<int>(type: "INTEGER", nullable: false),
                     ProductId = table.Column<int>(type: "INTEGER", nullable: false),
                     Quantity = table.Column<int>(type: "INTEGER", nullable: false),
-                    UnitPrice = table.Column<double>(type: "REAL", nullable: false),
-                    LineTotal = table.Column<double>(type: "REAL", nullable: false)
+                    UnitPrice = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
+                    LineTotal = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -90,6 +108,12 @@ namespace test_.net.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Clients_Email",
+                table: "Clients",
+                column: "Email",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_OrderLines_OrderId",
                 table: "OrderLines",
                 column: "OrderId");
@@ -103,6 +127,17 @@ namespace test_.net.Migrations
                 name: "IX_Orders_ClientId",
                 table: "Orders",
                 column: "ClientId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Orders_ClientId1",
+                table: "Orders",
+                column: "ClientId1");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Orders_OrderNumber",
+                table: "Orders",
+                column: "OrderNumber",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Products_Reference",
@@ -123,9 +158,8 @@ namespace test_.net.Migrations
             migrationBuilder.DropTable(
                 name: "Products");
 
-            migrationBuilder.DropColumn(
-                name: "Password",
-                table: "Clients");
+            migrationBuilder.DropTable(
+                name: "Clients");
         }
     }
 }

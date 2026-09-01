@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace test_.net.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260831105828_auth")]
-    partial class auth
+    [Migration("20260901104746_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -51,6 +51,7 @@ namespace test_.net.Migrations
 
                     b.Property<string>("Password")
                         .IsRequired()
+                        .HasMaxLength(255)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Phone")
@@ -75,6 +76,9 @@ namespace test_.net.Migrations
                     b.Property<int>("ClientId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("ClientId1")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("TEXT");
 
@@ -86,15 +90,22 @@ namespace test_.net.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
-                    b.Property<double>("TotalHT")
-                        .HasColumnType("REAL");
+                    b.Property<decimal>("TotalHT")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
 
-                    b.Property<double>("TotalTTC")
-                        .HasColumnType("REAL");
+                    b.Property<decimal>("TotalTTC")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ClientId");
+
+                    b.HasIndex("ClientId1");
+
+                    b.HasIndex("OrderNumber")
+                        .IsUnique();
 
                     b.ToTable("Orders");
                 });
@@ -105,8 +116,9 @@ namespace test_.net.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<double>("LineTotal")
-                        .HasColumnType("REAL");
+                    b.Property<decimal>("LineTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("OrderId")
                         .HasColumnType("INTEGER");
@@ -117,8 +129,9 @@ namespace test_.net.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("INTEGER");
 
-                    b.Property<double>("UnitPrice")
-                        .HasColumnType("REAL");
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -140,6 +153,7 @@ namespace test_.net.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
+                        .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
@@ -155,8 +169,9 @@ namespace test_.net.Migrations
                     b.Property<int>("StockQuantity")
                         .HasColumnType("INTEGER");
 
-                    b.Property<double>("UnitPriceHT")
-                        .HasColumnType("REAL");
+                    b.Property<decimal>("UnitPriceHT")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -169,10 +184,14 @@ namespace test_.net.Migrations
             modelBuilder.Entity("CommercialManagement.API.Models.Order", b =>
                 {
                     b.HasOne("CommercialManagement.API.Models.Client", "Client")
-                        .WithMany("Orders")
+                        .WithMany()
                         .HasForeignKey("ClientId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("CommercialManagement.API.Models.Client", null)
+                        .WithMany("Orders")
+                        .HasForeignKey("ClientId1");
 
                     b.Navigation("Client");
                 });

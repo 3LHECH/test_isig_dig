@@ -24,7 +24,7 @@ public record CreateClientDto(
 public record UpdateClientDto(
     [Required, MaxLength(100)] string LastName,
     [Required, MaxLength(100)] string FirstName,
-    [Required, MaxLength(255)] string Password,
+    [MaxLength(255)] string? Password,
     [Required, EmailAddress, MaxLength(150)] string Email,
     [RegularExpression(@"^[0-9]{8}$", ErrorMessage = "Phone number must be exactly 8 digits.")] string Phone,
     [MaxLength(250)] string Address
