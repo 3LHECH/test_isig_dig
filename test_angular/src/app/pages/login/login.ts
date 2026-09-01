@@ -61,7 +61,7 @@ export class Login {
 
         // Standard Error Object Response
         if (err?.error?.message) {
-          this.errorMessage.set(err.error.message);
+          this.errorMessage.set("a user with that email do exist");
           return;
         }
 
