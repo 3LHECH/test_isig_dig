@@ -32,10 +32,17 @@ public class ClientsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<ClientResponseDto>> Create(CreateClientDto dto)
+    public async Task<IActionResult> Create([FromBody] CreateClientDto dto)
     {
-        var createdClient = await _clientService.CreateAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = createdClient.Id }, createdClient);
+        try
+        {
+            var result = await _clientService.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is SqliteException sqliteEx && sqliteEx.SqliteErrorCode == 19)
+        {
+            return Conflict(new { message = $"A client with email '{dto.Email}' already exists." });
+        }
     }
 
     [HttpPut("{id:int}")]

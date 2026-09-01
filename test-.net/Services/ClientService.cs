@@ -44,31 +44,29 @@ public class ClientService : IClientService
         return await _context.Clients.FirstOrDefaultAsync(c => c.Email == email);
     }
 
-    public async Task<ClientResponseDto> CreateAsync(CreateClientDto dto)
+    public async Task<ClientResponseDto> CreateAsync(CreateClientDto dto, CancellationToken cancellationToken = default)
     {
+        // Check if the email is already registered
+        var emailExists = await _context.Clients
+            .AnyAsync(c => c.Email == dto.Email, cancellationToken);
+
+        if (emailExists)
+        {
+            throw new InvalidOperationException($"A client with the email '{dto.Email}' already exists.");
+        }
+
         var client = new Client
         {
-            LastName = dto.LastName,
-            FirstName = dto.FirstName,
+            // Map DTO properties
             Email = dto.Email,
-            Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-            Phone = dto.Phone,
-            Address = dto.Address,
-            CreatedAt = DateTime.UtcNow
+            FirstName = dto.FirstName,
+            // ...
         };
 
         _context.Clients.Add(client);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(cancellationToken);
 
-        return new ClientResponseDto(
-            client.Id,
-            client.LastName,
-            client.FirstName,
-            client.Email,
-            client.Phone,
-            client.Address,
-            client.CreatedAt
-        );
+        return MapToDto(client);
     }
 
     public async Task<bool> UpdateAsync(int id, UpdateClientDto dto)
